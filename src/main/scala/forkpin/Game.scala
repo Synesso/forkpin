@@ -23,10 +23,10 @@ object Game {
           castlingAvailability = castlingAvailability match {
             case "-" => BitSet.empty
             case ca => ca.foldRight(BitSet.empty) {
-              case ('K', bs) => bs + 3
-              case ('Q', bs) => bs + 2
-              case ('k', bs) => bs + 1
-              case ('q', bs) => bs + 0
+              case ('K', bs) => bs + 0
+              case ('Q', bs) => bs + 1
+              case ('k', bs) => bs + 2
+              case ('q', bs) => bs + 3
               case _ => throw BadFEN(fen, "invalid castling availability (field 3)")
             }
           },
@@ -77,14 +77,27 @@ case class Game(board: Vector[Option[Piece]],
                 halfMoveClock: Int,
                 fullMoveClock: Int) {
 
-  def toFEN: String = "hi!"
+  def toFEN: String = {
+    val pieces = board.grouped(8).toSeq.transpose.map { rank =>
+      val (row, empty) = rank.foldLeft(("", 0)) {
+        case ((s, mt), Some(piece)) if mt > 0 => (s + mt + piece.toFEN, 0)
+        case ((s, mt), Some(piece)) => (s + piece.toFEN, 0)
+        case ((s, mt), None) => (s, mt + 1)
+      }
+      if (empty == 0) row else row + empty
+    }.reverse.mkString("/")
+
+    val castle = castlingAvailability.map("KQkq".charAt).foldLeft("")(_ + _)
+
+    s"$pieces ${activePlayer.toFEN} $castle ${enPassantTarget.getOrElse("-")} $halfMoveClock $fullMoveClock"
+  }
 
   def pieceAt(sq: Square): Option[Piece] = board(sq.i)
 
   private[Game] def place(piece: Piece, square: Square): Game = this.copy(board = board.updated(square.i, Some(piece)))
 
   def canCastle(player: Player, side: Side): Boolean = {
-    val bit = (if (player == White) 2 else 0) + (if (side == KingSide) 1 else 0)
+    val bit = (if (player == White) 0 else 2) + (if (side == KingSide) 0 else 1)
     castlingAvailability(bit)
   }
 }

@@ -53,7 +53,7 @@ class FENParseSpec extends Specification with ArbitraryInput {
 
     "field 3 should set the castling availability" >> prop { (wk: Boolean, wq: Boolean, bk: Boolean, bq: Boolean) =>
       val ca = (if (wk) "K" else "") + (if (wq) "Q" else "") + (if (bk) "k" else "") + (if (bq) "q" else "")
-      Game.fromFEN(s"8/8/8/8/8/8/8/8 w ${if (ca == "") "-" else ca } - 0 1") must beSuccessfulTry[Game].like {
+      Game.fromFEN(s"8/8/8/8/8/8/8/8 w ${if (ca == "") "-" else ca} - 0 1") must beSuccessfulTry[Game].like {
         case g: Game =>
           g.canCastle(White, KingSide) mustEqual wk
           g.canCastle(White, QueenSide) mustEqual wq
@@ -116,9 +116,14 @@ class FENParseSpec extends Specification with ArbitraryInput {
   }
 
   "a game serialised to FEN" should {
+    "be correct for the starting position" >> {
+      Game.fromFEN("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1").get.toFEN mustEqual
+        "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"
+    }
+
     "always be restored to the original game" >> prop { game: Game =>
       Game.fromFEN(game.toFEN) must beSuccessfulTry(game)
     }
-  }
 
+  }
 }

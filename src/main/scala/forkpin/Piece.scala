@@ -4,13 +4,26 @@ import scala.util.Try
 
 sealed trait Piece {
   val p: Player
+  def toFEN: String
 }
-case class Pawn(p: Player) extends Piece
-case class Rook(p: Player) extends Piece
-case class Knight(p: Player) extends Piece
-case class Bishop(p: Player) extends Piece
-case class Queen(p: Player) extends Piece
-case class King(p: Player) extends Piece
+case class Pawn(p: Player) extends Piece {
+  override def toFEN = if (p == White) "P" else "p"
+}
+case class Rook(p: Player) extends Piece {
+  override def toFEN = if (p == White) "R" else "r"
+}
+case class Knight(p: Player) extends Piece {
+  override def toFEN = if (p == White) "N" else "n"
+}
+case class Bishop(p: Player) extends Piece {
+  override def toFEN = if (p == White) "B" else "b"
+}
+case class Queen(p: Player) extends Piece {
+  override def toFEN = if (p == White) "Q" else "q"
+}
+case class King(p: Player) extends Piece {
+  override def toFEN = if (p == White) "K" else "k"
+}
 
 object Piece {
   def fromFEN(c: Char): Try[Piece] = Try(c match {

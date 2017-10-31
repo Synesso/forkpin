@@ -1,5 +1,11 @@
 package forkpin
 
-trait Player
-case object Black extends Player
-case object White extends Player
+trait Player {
+  val toFEN: String
+}
+case object Black extends Player {
+  val toFEN = "b"
+}
+case object White extends Player {
+  val toFEN = "w"
+}
