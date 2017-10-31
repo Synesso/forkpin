@@ -48,21 +48,20 @@ object Game {
         val rankFs = Seq(a _, b _, c _, d _, e _, f _, g _, h _)
 
         @tailrec
-        def parsePlacement(ranks: Seq[String], nextRank: Int): Game = ranks match {
+        def parsePlacement(ranks: Seq[String], nextRank: Int, g: Game): Game = ranks match {
           case h +: t =>
-            val placings = h.foldLeft(rankFs) {
-              case (fs, c) if c.isDigit =>
+            val (placings, gamePlaced) = h.foldLeft((rankFs, g)) {
+              case ((fs, gi), c) if c.isDigit =>
                 if (fs.size < c.asDigit) throw BadFEN(fen, s"invalid placement (field 1), incorrect qty in rank $h")
-                else fs.drop(c.asDigit)
-              case (fs, c) =>
-                game.place(Piece.fromFEN(c).get, fs.head(nextRank))
-                fs.tail
+                else (fs.drop(c.asDigit), gi)
+              case ((fs, gi), c) =>
+                (fs.tail, gi.place(Piece.fromFEN(c).get, fs.head(nextRank)))
             }
             if (placings.nonEmpty) throw BadFEN(fen, s"invalid placement (field 1), incorrect qty in rank $h")
-            parsePlacement(t, nextRank + 1)
-          case _ => game
+            parsePlacement(t, nextRank + 1, gamePlaced)
+          case _ => g
         }
-        Try(parsePlacement(ranks.reverse, 1)).get
+        Try(parsePlacement(ranks.reverse, 1, game)).get
 
         case _ =>
           throw BadFEN(fen, "invalid number of fields")

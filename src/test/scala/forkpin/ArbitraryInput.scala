@@ -16,7 +16,7 @@ trait ArbitraryInput extends ScalaCheck {
 
   implicit val arbGame: Arbitrary[Game] = Arbitrary(genGame)
   def genGame: Gen[Game] = for {
-    pieces <- Gen.listOfN(64, Gen.option(genPiece)).map(_.toArray)
+    pieces <- Gen.listOfN(64, Gen.option(genPiece)).map(_.toVector)
     activePlayer <- Gen.oneOf(Black, White)
     castlingAvailability <- Gen.listOfN(4, Gen.oneOf(true, false)).map(_.zipWithIndex)
       .map(_.foldLeft(BitSet.empty) { case (bits, (on, bit)) => if (on) bits + bit else bits })
