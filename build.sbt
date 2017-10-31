@@ -5,11 +5,12 @@ organization := "com.github.synesso"
 
 version := sys.env.getOrElse("TRAVIS_BRANCH", "dev")
 
-scalaVersion := "2.11.11"
+scalaVersion := "2.12.4"
 
 libraryDependencies ++= List(
-  "org.specs2" %% "specs2-core" % "3.9.1" % "test",
-  "org.specs2" %% "specs2-scalacheck" % "3.9.1" % "test"
+  "org.specs2" %% "specs2-core" % "4.0.0" % "test",
+  "org.specs2" %% "specs2-scalacheck" % "4.0.0" % "test",
+  "org.bouncycastle" % "bcpg-jdk16" % "1.46"
 )
 
 scalacOptions ++= Seq(
