@@ -26,7 +26,7 @@ case class King(p: Player) extends Piece {
 }
 
 object Piece {
-  def fromFEN(c: Char): Try[Piece] = Try(c match {
+  def fromAN(c: Char): Try[Piece] = Try(c match {
     case 'p' => Pawn(Black)
     case 'r' => Rook(Black)
     case 'n' => Knight(Black)

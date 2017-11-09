@@ -8,6 +8,8 @@ import scala.util.Try
 
 object Game {
 
+  val start: Game = fromFEN("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1").get
+
   def fromFEN(fen: String): Try[Game] = {
     Try {
       fen.trim.split(" ") match {
@@ -33,7 +35,7 @@ object Game {
 
           enPassantTarget = enPassantTarget match {
             case "-" => None
-            case sq => Some(Square.parse(sq).getOrElse(throw BadFEN(fen, "invalid enpassant target (field 4)")))
+            case sq => Some(Square.fromAN(sq).getOrElse(throw BadFEN(fen, "invalid enpassant target (field 4)")))
           },
 
           halfMoveClock = Try(halfMoveClock.toInt)
@@ -55,7 +57,7 @@ object Game {
                 if (fs.size < c.asDigit) throw BadFEN(fen, s"invalid placement (field 1), incorrect qty in rank $h")
                 else (fs.drop(c.asDigit), gi)
               case ((fs, gi), c) =>
-                (fs.tail, gi.place(Piece.fromFEN(c).get, fs.head(nextRank)))
+                (fs.tail, gi.place(Piece.fromAN(c).get, fs.head(nextRank)))
             }
             if (placings.nonEmpty) throw BadFEN(fen, s"invalid placement (field 1), incorrect qty in rank $h")
             parsePlacement(t, nextRank + 1, gamePlaced)
@@ -76,6 +78,11 @@ case class Game(board: Vector[Option[Piece]],
                 enPassantTarget: Option[Square],
                 halfMoveClock: Int,
                 fullMoveClock: Int) {
+
+  def move(algebriacNotation: String): Try[Game] = Move.fromAN(algebriacNotation).flatMap(move)
+
+  private def move(m: Move): Try[Game] = ???
+
 
   def toFEN: String = {
     val pieces = board.grouped(8).toSeq.transpose.map { rank =>

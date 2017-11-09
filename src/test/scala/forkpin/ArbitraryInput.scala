@@ -12,7 +12,7 @@ trait ArbitraryInput extends ScalaCheck {
   def genSquare: Gen[Square] = for {
     f <- Gen.oneOf('a' to 'h')
     r <- Gen.oneOf(1 to 8)
-  } yield Square.parse(s"$f$r").get
+  } yield Square.fromAN(s"$f$r").get
 
   implicit val arbGame: Arbitrary[Game] = Arbitrary(genGame)
   def genGame: Gen[Game] = for {
@@ -25,11 +25,11 @@ trait ArbitraryInput extends ScalaCheck {
     fullMoveClock <- Gen.choose(1, 70)
   } yield Game(pieces, activePlayer, castlingAvailability, enPassantTarget, halfMoveClock, fullMoveClock)
 
-    def genPiece: Gen[Piece] = for {
-      player <- Gen.oneOf(Black, White)
-      piece <- Gen.oneOf[Player => Piece](King, Queen, Bishop, Knight, Rook, Bishop, Knight, Rook, Pawn, Pawn, Pawn,
-        Pawn, Pawn, Pawn, Pawn, Pawn)
-    } yield piece(player)
-
+  implicit val arbPiece: Arbitrary[Piece] = Arbitrary(genPiece)
+  def genPiece: Gen[Piece] = for {
+    player <- Gen.oneOf(Black, White)
+    piece <- Gen.oneOf[Player => Piece](King, Queen, Bishop, Knight, Rook, Bishop, Knight, Rook, Pawn, Pawn, Pawn,
+      Pawn, Pawn, Pawn, Pawn, Pawn)
+  } yield piece(player)
 
 }

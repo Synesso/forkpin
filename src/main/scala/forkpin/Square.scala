@@ -4,7 +4,7 @@ import scala.util.Try
 
 case object Square {
   private val NotationRegex = "([a-h])([1-8])".r
-  def parse(sq: String): Try[Square] = Try {
+  def fromAN(sq: String): Try[Square] = Try {
     val NotationRegex(file, rank) = sq
     Square(((file.head - 'a') * 8) + rank.head - '1')
   }

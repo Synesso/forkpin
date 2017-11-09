@@ -21,7 +21,7 @@ class SquareSpec extends Specification with ScalaCheck {
       val tests: Seq[(Square, Square)] = for {
         f <- "abcdefgh" zip List(a _, b _, c _, d _, e _, f _, g _, h _)
         r <- 1 to 8
-      } yield (Square.parse(s"${f._1}$r").get, f._2(r))
+      } yield (Square.fromAN(s"${f._1}$r").get, f._2(r))
       tests.filter{ case (ex, ac) => ex != ac } must beEmpty
     }
   }
