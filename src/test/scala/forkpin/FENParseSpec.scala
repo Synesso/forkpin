@@ -18,13 +18,13 @@ class FENParseSpec extends Specification with ArbitraryInput {
     "field 1 should be the piece placement" >> {
       Game.fromFEN("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1") must beSuccessfulTry[Game].like {
         case g: Game =>
-          g.pieceAt(a(8)) must beSome[Piece](Rook(Black))
-          g.pieceAt(d(8)) must beSome[Piece](Queen(Black))
-          g.pieceAt(d(7)) must beSome[Piece](Pawn(Black))
+          g.pieceAt(a(8)) must beSome(Token(Rook, Black))
+          g.pieceAt(d(8)) must beSome(Token(Queen, Black))
+          g.pieceAt(d(7)) must beSome(Token(Pawn, Black))
           g.pieceAt(d(6)) must beNone
-          g.pieceAt(e(2)) must beSome[Piece](Pawn(White))
-          g.pieceAt(a(1)) must beSome[Piece](Rook(White))
-          g.pieceAt(f(1)) must beSome[Piece](Bishop(White))
+          g.pieceAt(e(2)) must beSome(Token(Pawn, White))
+          g.pieceAt(a(1)) must beSome(Token(Rook, White))
+          g.pieceAt(f(1)) must beSome(Token(Bishop, White))
       }
     }
 

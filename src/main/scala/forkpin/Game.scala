@@ -15,7 +15,7 @@ object Game {
       fen.trim.split(" ") match {
         case Array(placement, activePlayer, castlingAvailability, enPassantTarget, halfMoveClock, fullMoveClock) =>
         val game = Game(
-          board = Vector.fill(64)(Option.empty[Piece]),
+          board = Vector.fill(64)(Option.empty[Token]),
           activePlayer = activePlayer match {
             case "w" => White
             case "b" => Black
@@ -57,7 +57,7 @@ object Game {
                 if (fs.size < c.asDigit) throw BadFEN(fen, s"invalid placement (field 1), incorrect qty in rank $h")
                 else (fs.drop(c.asDigit), gi)
               case ((fs, gi), c) =>
-                (fs.tail, gi.place(Piece.fromAN(c).get, fs.head(nextRank)))
+                (fs.tail, gi.place(Token.fromAN(c).get, fs.head(nextRank)))
             }
             if (placings.nonEmpty) throw BadFEN(fen, s"invalid placement (field 1), incorrect qty in rank $h")
             parsePlacement(t, nextRank + 1, gamePlaced)
@@ -72,14 +72,40 @@ object Game {
   }
 }
 
-case class Game(board: Vector[Option[Piece]],
+case class Game(board: Vector[Option[Token]],
                 activePlayer: Player,
                 castlingAvailability: BitSet,
                 enPassantTarget: Option[Square],
                 halfMoveClock: Int,
                 fullMoveClock: Int) {
 
-  def move(algebriacNotation: String): Try[Game] = Move.fromAN(algebriacNotation).flatMap(move)
+  def threats(sq: Square): Map[Square, Set[Token]] = {
+    // check pawns
+    val pawns: Seq[(Square, Set[Token])] =
+      Seq(sq.kingSide(1).flatMap(_.blackSide(1)), sq.queenSide(1).flatMap(_.blackSide(1))).flatten
+      .filter(sq => pieceAt(sq).contains(Token(Pawn, Black))).map(_ -> Set(Token(Pawn, Black))) ++
+      Seq(sq.kingSide(1).flatMap(_.whiteSide(1)), sq.queenSide(1).flatMap(_.whiteSide(1))).flatten
+        .filter(sq => pieceAt(sq).contains(Token(Pawn, White))).map(_ -> Set(Token(Pawn, White)))
+
+    // check kings
+    val kings: Seq[(Square, Set[Token])]  = {
+      (for {
+        lr <- -1 to 1
+        ud <- -1 to 1
+      } yield sq.kingSide(lr).flatMap(_.blackSide(ud))).flatten.filterNot(_ == sq).flatMap { attackingSquare =>
+        pieceAt(attackingSquare).flatMap {
+          case t @ Token(King, _) => Some(attackingSquare -> Set(t))
+          case _ => None
+        }
+      }
+    }
+
+    (pawns ++ kings).foldLeft(Map.empty[Square, Set[Token]].withDefaultValue(Set.empty[Token])) { case (acc, (s, p)) =>
+        acc.updated(s, acc(s) ++ p)
+    }
+  }
+
+  def move(an: String): Try[Game] = Move.fromAN(an).flatMap(move)
 
   private def move(m: Move): Try[Game] = ???
 
@@ -99,9 +125,9 @@ case class Game(board: Vector[Option[Piece]],
     s"$pieces ${activePlayer.toFEN} $castle ${enPassantTarget.getOrElse("-")} $halfMoveClock $fullMoveClock"
   }
 
-  def pieceAt(sq: Square): Option[Piece] = board(sq.i)
+  def pieceAt(sq: Square): Option[Token] = board(sq.i)
 
-  private[Game] def place(piece: Piece, square: Square): Game = this.copy(board = board.updated(square.i, Some(piece)))
+  private[Game] def place(token: Token, square: Square): Game = this.copy(board = board.updated(square.i, Some(token)))
 
   def canCastle(player: Player, side: Side): Boolean = {
     val bit = (if (player == White) 0 else 2) + (if (side == KingSide) 0 else 1)

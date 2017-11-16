@@ -16,20 +16,20 @@ trait ArbitraryInput extends ScalaCheck {
 
   implicit val arbGame: Arbitrary[Game] = Arbitrary(genGame)
   def genGame: Gen[Game] = for {
-    pieces <- Gen.listOfN(64, Gen.option(genPiece)).map(_.toVector)
+    tokens <- Gen.listOfN(64, Gen.option(genToken)).map(_.toVector)
     activePlayer <- Gen.oneOf(Black, White)
     castlingAvailability <- Gen.listOfN(4, Gen.oneOf(true, false)).map(_.zipWithIndex)
       .map(_.foldLeft(BitSet.empty) { case (bits, (on, bit)) => if (on) bits + bit else bits })
     enPassantTarget <- Gen.option(genSquare)
     halfMoveClock <- Gen.choose(0, 50)
     fullMoveClock <- Gen.choose(1, 70)
-  } yield Game(pieces, activePlayer, castlingAvailability, enPassantTarget, halfMoveClock, fullMoveClock)
+  } yield Game(tokens, activePlayer, castlingAvailability, enPassantTarget, halfMoveClock, fullMoveClock)
 
-  implicit val arbPiece: Arbitrary[Piece] = Arbitrary(genPiece)
-  def genPiece: Gen[Piece] = for {
+  implicit val arbToken: Arbitrary[Token] = Arbitrary(genToken)
+  def genToken: Gen[Token] = for {
     player <- Gen.oneOf(Black, White)
-    piece <- Gen.oneOf[Player => Piece](King, Queen, Bishop, Knight, Rook, Bishop, Knight, Rook, Pawn, Pawn, Pawn,
+    piece <- Gen.oneOf(King, Queen, Bishop, Knight, Rook, Bishop, Knight, Rook, Pawn, Pawn, Pawn,
       Pawn, Pawn, Pawn, Pawn, Pawn)
-  } yield piece(player)
+  } yield Token(piece, player)
 
 }

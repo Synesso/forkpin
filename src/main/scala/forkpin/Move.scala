@@ -2,7 +2,7 @@ package forkpin
 
 import scala.util.{Failure, Success, Try}
 
-case class Move(p: Piece, to: Square, fromFile: Option[Char] = None) {
+case class Move(t: Token, to: Square, fromFile: Option[Char] = None) {
 
 }
 
@@ -14,7 +14,7 @@ object Move {
     an match {
       case NamedPieceMove(piece, square) =>
         for {
-          p <- Piece.fromAN(piece.head)
+          p <- Token.fromAN(piece.head)
           s <- Square.fromAN(square)
         } yield Move(p, s)
       case _ => Failure(new Exception("todo"))

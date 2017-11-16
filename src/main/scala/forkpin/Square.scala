@@ -17,7 +17,20 @@ case object Square {
   def f(i: Int) = Square(39 + i)
   def g(i: Int) = Square(47 + i)
   def h(i: Int) = Square(55 + i)
+
+  val all: Set[Square] = (0 to 63).map(Square.apply).toSet
 }
  case class Square(i: Int) extends AnyVal {
+
    override def toString: String = s"${('a' + (i / 8)).asInstanceOf[Char]}${i % 8 + 1}"
+   def blackSide(dist: Int): Option[Square] = {
+     val check = i % 8 + dist
+     if (check >= 8 || check < 0) None else Some(Square(i + dist))
+   }
+   def kingSide(dist: Int): Option[Square] = {
+     val check = i + dist * 8
+     if (check >= 64 || check < 0) None else Some(Square(i + dist * 8))
+   }
+   def queenSide(dist: Int): Option[Square] = kingSide(dist * -1)
+   def whiteSide(dist: Int): Option[Square] = blackSide(dist * -1)
  }
