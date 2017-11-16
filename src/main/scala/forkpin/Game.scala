@@ -1,5 +1,6 @@
 package forkpin
 
+import forkpin.Game.{kingMoves, knightMoves}
 import forkpin.Square._
 
 import scala.annotation.tailrec
@@ -70,6 +71,19 @@ object Game {
       }
     }
   }
+
+  private[Game] val kingMoves = for {
+    r <- -1 to 1
+    f <- -1 to 1
+    if !(r == 0 && f == 0)
+  } yield (r, f)
+
+  private[Game] val knightMoves = for {
+    r <- (-2 to 2).filterNot(_ == 0)
+    f <- (-2 to 2).filterNot(_ == 0)
+    if math.abs(r) != math.abs(f)
+  } yield (r, f)
+
 }
 
 case class Game(board: Vector[Option[Token]],
@@ -80,27 +94,28 @@ case class Game(board: Vector[Option[Token]],
                 fullMoveClock: Int) {
 
   def threats(sq: Square): Map[Square, Set[Token]] = {
-    // check pawns
+
+    def checkStepMoves(moves: Seq[(Int, Int)], Target: Piece) =
+      moves
+        .flatMap { case (r, f) => sq.move(f, r) }
+        .flatMap { attackingSquare =>
+          pieceAt(attackingSquare).flatMap {
+            case t@Token(Target, _) => Some(attackingSquare -> Set(t))
+            case _ => None
+          }
+        }
+
     val pawns: Seq[(Square, Set[Token])] =
       Seq(sq.kingSide(1).flatMap(_.blackSide(1)), sq.queenSide(1).flatMap(_.blackSide(1))).flatten
-      .filter(sq => pieceAt(sq).contains(Token(Pawn, Black))).map(_ -> Set(Token(Pawn, Black))) ++
-      Seq(sq.kingSide(1).flatMap(_.whiteSide(1)), sq.queenSide(1).flatMap(_.whiteSide(1))).flatten
-        .filter(sq => pieceAt(sq).contains(Token(Pawn, White))).map(_ -> Set(Token(Pawn, White)))
+        .filter(sq => pieceAt(sq).contains(Token(Pawn, Black))).map(_ -> Set(Token(Pawn, Black))) ++
+        Seq(sq.kingSide(1).flatMap(_.whiteSide(1)), sq.queenSide(1).flatMap(_.whiteSide(1))).flatten
+          .filter(sq => pieceAt(sq).contains(Token(Pawn, White))).map(_ -> Set(Token(Pawn, White)))
 
-    // check kings
-    val kings: Seq[(Square, Set[Token])]  = {
-      (for {
-        lr <- -1 to 1
-        ud <- -1 to 1
-      } yield sq.kingSide(lr).flatMap(_.blackSide(ud))).flatten.filterNot(_ == sq).flatMap { attackingSquare =>
-        pieceAt(attackingSquare).flatMap {
-          case t @ Token(King, _) => Some(attackingSquare -> Set(t))
-          case _ => None
-        }
-      }
-    }
+    val kings: Seq[(Square, Set[Token])] = checkStepMoves(kingMoves, King)
 
-    (pawns ++ kings).foldLeft(Map.empty[Square, Set[Token]].withDefaultValue(Set.empty[Token])) { case (acc, (s, p)) =>
+    val knights: Seq[(Square, Set[Token])] = checkStepMoves(knightMoves, Knight)
+
+    (pawns ++ kings ++ knights).foldLeft(Map.empty[Square, Set[Token]].withDefaultValue(Set.empty[Token])) { case (acc, (s, p)) =>
         acc.updated(s, acc(s) ++ p)
     }
   }

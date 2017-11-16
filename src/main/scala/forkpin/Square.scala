@@ -23,6 +23,7 @@ case object Square {
  case class Square(i: Int) extends AnyVal {
 
    override def toString: String = s"${('a' + (i / 8)).asInstanceOf[Char]}${i % 8 + 1}"
+   def move(toBlack: Int, toKing: Int): Option[Square] = blackSide(toBlack).flatMap(_.kingSide(toKing))
    def blackSide(dist: Int): Option[Square] = {
      val check = i % 8 + dist
      if (check >= 8 || check < 0) None else Some(Square(i + dist))
