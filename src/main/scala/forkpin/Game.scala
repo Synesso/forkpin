@@ -109,12 +109,12 @@ case class Game(board: Vector[Option[Token]],
           }
         }
 
-    def checkProjectedMoves(moves: Seq[(Int, Int)], Target: Piece): Seq[(Square, Set[Token])] = {
+    def checkProjectedMoves(moves: Seq[(Int, Int)], targets: Set[Piece]): Seq[(Square, Set[Token])] = {
 
       def project(from: Square, rank: Int, file: Int): Option[Square] = {
         from.move(rank, file).flatMap { next =>
           pieceAt(next) match {
-            case Some(Token(Target, _)) => Some(next)
+            case Some(Token(target, _)) if targets.contains(target) => Some(next)
             case Some(_) => None
             case None => project(next, rank, file)
           }
@@ -134,9 +134,9 @@ case class Game(board: Vector[Option[Token]],
 
     val knights: Seq[(Square, Set[Token])] = checkStepMoves(knightMoves, Knight)
 
-    val rooks: Seq[(Square, Set[Token])] = checkProjectedMoves(rookMoves, Rook)
+    val rooks: Seq[(Square, Set[Token])] = checkProjectedMoves(rookMoves, Set(Rook, Queen))
 
-    val bishops: Seq[(Square, Set[Token])] = checkProjectedMoves(bishopMoves, Bishop)
+    val bishops: Seq[(Square, Set[Token])] = checkProjectedMoves(bishopMoves, Set(Bishop, Queen))
 
     (pawns ++ kings ++ knights ++ rooks ++ bishops)
       .foldLeft(Map.empty[Square, Set[Token]].withDefaultValue(Set.empty[Token])) { case (acc, (s, p)) =>
