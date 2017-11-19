@@ -86,6 +86,8 @@ object Game {
 
   private[Game] val rookMoves = Seq((0, 1), (1, 0), (-1, 0), (0, -1))
 
+  private[Game] val bishopMoves = Seq((1, 1), (1, -1), (-1, 1), (-1, -1))
+
 }
 
 case class Game(board: Vector[Option[Token]],
@@ -134,7 +136,9 @@ case class Game(board: Vector[Option[Token]],
 
     val rooks: Seq[(Square, Set[Token])] = checkProjectedMoves(rookMoves, Rook)
 
-    (pawns ++ kings ++ knights ++ rooks)
+    val bishops: Seq[(Square, Set[Token])] = checkProjectedMoves(bishopMoves, Bishop)
+
+    (pawns ++ kings ++ knights ++ rooks ++ bishops)
       .foldLeft(Map.empty[Square, Set[Token]].withDefaultValue(Set.empty[Token])) { case (acc, (s, p)) =>
         acc.updated(s, acc(s) ++ p)
     }

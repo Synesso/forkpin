@@ -81,6 +81,21 @@ class ThreatSpec extends Specification with ArbitraryInput {
         (_: Map[Square, Set[Token]]) must beEmpty
       }
     }
+    "be threatened by a bishop on the diagonals" >> {
+      val game = Game.fromFEN("8/8/2b5/8/8/3B4/8/8 w KQkq - 0 1").get
+      val blackThreats = Seq(a(8), b(7), d(5), e(4), f(3), g(2), h(1), a(4), b(5), d(7), e(8))
+      val whiteThreats = Seq(b(1), c(2), e(4), f(5), g(6), h(7), a(6), b(5), c(4), e(2), f(1))
+      val safe = Square.all -- blackThreats -- whiteThreats
+      forall(blackThreats.map(game.threats)) {
+        (_: Map[Square, Set[Token]]) must contain(c(6) -> Set(Token(Bishop, Black)))
+      }
+      forall(whiteThreats.map(game.threats)) {
+        (_: Map[Square, Set[Token]]) must contain(d(3) -> Set(Token(Bishop, White)))
+      }
+      forall(safe.map(game.threats)) {
+        (_: Map[Square, Set[Token]]) must beEmpty
+      }
+    }
   }
 
 }
