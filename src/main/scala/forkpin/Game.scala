@@ -1,6 +1,6 @@
 package forkpin
 
-import forkpin.Game.{kingMoves, knightMoves}
+import forkpin.Game._
 import forkpin.Square._
 
 import scala.annotation.tailrec
@@ -84,6 +84,8 @@ object Game {
     if math.abs(r) != math.abs(f)
   } yield (r, f)
 
+  private[Game] val rookMoves = Seq((0, 1), (1, 0), (-1, 0), (0, -1))
+
 }
 
 case class Game(board: Vector[Option[Token]],
@@ -95,7 +97,7 @@ case class Game(board: Vector[Option[Token]],
 
   def threats(sq: Square): Map[Square, Set[Token]] = {
 
-    def checkStepMoves(moves: Seq[(Int, Int)], Target: Piece) =
+    def checkStepMoves(moves: Seq[(Int, Int)], Target: Piece): Seq[(Square, Set[Token])]  =
       moves
         .flatMap { case (r, f) => sq.move(f, r) }
         .flatMap { attackingSquare =>
@@ -104,6 +106,21 @@ case class Game(board: Vector[Option[Token]],
             case _ => None
           }
         }
+
+    def checkProjectedMoves(moves: Seq[(Int, Int)], Target: Piece): Seq[(Square, Set[Token])] = {
+
+      def project(from: Square, rank: Int, file: Int): Option[Square] = {
+        from.move(rank, file).flatMap { next =>
+          pieceAt(next) match {
+            case Some(Token(Target, _)) => Some(next)
+            case Some(_) => None
+            case None => project(next, rank, file)
+          }
+        }
+      }
+
+      moves.flatMap { case (r, f) => project(sq, r, f) }.flatMap(sq => pieceAt(sq).map(t => sq -> Set(t)))
+    }
 
     val pawns: Seq[(Square, Set[Token])] =
       Seq(sq.kingSide(1).flatMap(_.blackSide(1)), sq.queenSide(1).flatMap(_.blackSide(1))).flatten
@@ -115,7 +132,10 @@ case class Game(board: Vector[Option[Token]],
 
     val knights: Seq[(Square, Set[Token])] = checkStepMoves(knightMoves, Knight)
 
-    (pawns ++ kings ++ knights).foldLeft(Map.empty[Square, Set[Token]].withDefaultValue(Set.empty[Token])) { case (acc, (s, p)) =>
+    val rooks: Seq[(Square, Set[Token])] = checkProjectedMoves(rookMoves, Rook)
+
+    (pawns ++ kings ++ knights ++ rooks)
+      .foldLeft(Map.empty[Square, Set[Token]].withDefaultValue(Set.empty[Token])) { case (acc, (s, p)) =>
         acc.updated(s, acc(s) ++ p)
     }
   }
